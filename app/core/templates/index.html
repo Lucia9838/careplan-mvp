@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Care Plan Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #f5f0eb;
+      color: #2c2c2c;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: normal;
+      letter-spacing: 0.02em;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 36px;
+    }
+
+    .form-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+      background: #fafafa;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #6b8f71;
+      background: #fff;
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #3a5a40;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #2d4632; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* Result area */
+    #result {
+      display: none;
+      background: #fff;
+      border: 1px solid #c8ddc9;
+      border-radius: 8px;
+      padding: 32px;
+    }
+
+    #result h2 {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #3a5a40;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    #care-plan-text {
+      white-space: pre-wrap;
+      line-height: 1.8;
+      font-size: 0.97rem;
+      color: #333;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    .dot-flash {
+      display: inline-block;
+      animation: flash 1.2s infinite;
+    }
+
+    @keyframes flash {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Care Plan Generator</h1>
+    <p class="subtitle">MVP · Day 2 · Powered by Claude</p>
+
+    <div class="form-card">
+      <div class="field">
+        <label>Patient Name</label>
+        <input type="text" id="patient_name" placeholder="Jane Doe" />
+      </div>
+
+      <div class="field">
+        <label>Age</label>
+        <input type="number" id="age" placeholder="65" />
+      </div>
+
+      <div class="field">
+        <label>Medical Conditions</label>
+        <input type="text" id="conditions" placeholder="e.g. Type 2 diabetes, hypertension" />
+      </div>
+
+      <div class="field">
+        <label>Additional Notes</label>
+        <textarea id="notes" placeholder="e.g. Patient is non-ambulatory, lives alone, has dietary restrictions"></textarea>
+      </div>
+
+      <button id="submit-btn" onclick="submitForm()">Generate Care Plan</button>
+    </div>
+
+    <div class="spinner" id="spinner">
+      <span class="dot-flash">Generating care plan, please wait</span> ···
+    </div>
+
+    <div id="result">
+      <h2>Generated Care Plan</h2>
+      <div id="care-plan-text"></div>
+    </div>
+  </div>
+
+  <script>
+    async function submitForm() {
+      const btn     = document.getElementById('submit-btn');
+      const spinner = document.getElementById('spinner');
+      const result  = document.getElementById('result');
+      const output  = document.getElementById('care-plan-text');
+
+      const payload = {
+        patient_name: document.getElementById('patient_name').value,
+        age:          document.getElementById('age').value,
+        conditions:   document.getElementById('conditions').value,
+        notes:        document.getElementById('notes').value,
+      };
+
+      // Show loading state
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      spinner.style.display = 'block';
+      result.style.display = 'none';
+
+      const response = await fetch('/api/generate-careplan/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      // Show result
+      spinner.style.display = 'none';
+      result.style.display = 'block';
+      output.textContent = data.care_plan;
+
+      btn.disabled = false;
+      btn.textContent = 'Generate Care Plan';
+    }
+  </script>
+</body>
+</html>
